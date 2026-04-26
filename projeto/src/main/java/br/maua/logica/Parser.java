@@ -18,8 +18,12 @@ public class Parser {
 
     // Função vital: verifica a marca atual e avança na entrada
     private void accept(Tag tag) throws Exception {
+        // Imprime o token atual antes de avançar, para facilitar a compreensão do processo de consumo dos tokens na análise sintática
+        System.out.println("Validando token após o token: " + token.tag + " ('" + token.lexeme + "')");
         if (token.tag == tag) {
             token = lexer.yylex(); // Avança para o próximo token
+            // Imprime o próximo token a ser validado (token lido)
+            System.out.println("Token lido: " + token.tag + " ('" + token.lexeme + "')");
         } else {
             error(tag.toString());
         }
