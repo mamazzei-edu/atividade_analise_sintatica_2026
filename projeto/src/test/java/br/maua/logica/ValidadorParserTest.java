@@ -40,7 +40,7 @@ public class ValidadorParserTest {
     }
 
     @Test
-    public void test04_FormulaBemFormadaComplexa() throws Exception {
+    public void test04_FormulasBemFormadasComplexas() throws Exception {
         // Expressão complexa com parênteses e múltiplos operadores
         validarFBF("(A implies B) and (not C or true) implies (Z and false)");
         assertTrue(true);
