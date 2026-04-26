@@ -1,4 +1,4 @@
-## O problema da recursão em descrições gramaticais
+## O Problema da Recursão à Esquerda na Análise Descendente Recursiva
 
 Antes de falar sobre a recursão, é preciso entender de onde surgem os seus problemas.
 
@@ -100,3 +100,66 @@ Os três expressam a mesma linguagem (*zero ou mais ocorrências de B*), mas ape
 
 > **Conclusão:** O problema de recursão à esquerda é uma limitação dos *parsers descendentes recursivos*, não da notação em si. A EBNF não elimina o problema por ser "mais inteligente" — ela o *contorna estruturalmente*, pois seus operadores de repetição e opcionalidade são implementados como iteração, tornando desnecessário o uso de regras recursivas para expressar os padrões mais comuns de repetição.
 
+
+## Exemplo Prático: Eliminando a Recursão à Esquerda 
+
+**1. O Problema: A Regra em BNF (Recursiva à Esquerda)**
+Na matemática, a adição é associativa à esquerda. Por isso, a forma mais clássica e natural de escrever a regra de uma expressão de soma em notação BNF pura é:
+
+BNF
+<expr> ::= <expr> '+' <term> 
+         | <term>
+Leitura: "Uma expressão é uma expressão somada a um termo, OU apenas um termo".
+
+O que acontece no código do Analisador Descendente Recursivo?
+Se tentarmos traduzir essa regra diretamente para o Java, criaremos um laço infinito fatal:
+
+```Java
+private void expr() throws Exception {
+    // Para resolver o lado esquerdo da regra <expr> '+' <term>
+    // o analisador chama a si mesmo ANTES de consumir qualquer token!
+    expr(); 
+    accept(Tag.PLUS);
+    term();
+}
+```
+
+Como o método expr() chama expr() na primeira linha, a pilha de execução (Call Stack) do Java vai encher até o programa travar com um erro de StackOverflowError.
+
+**2. A Solução Matemática: Fatoração (BNF Pura)**
+
+Para resolver isso matematicamente na BNF (criando uma recursão à direita), nós dividimos o problema criando um novo símbolo não-terminal (vamos chamá-lo de <expr_linha>), que representa "o resto da soma":
+
+```BNF
+<expr>       ::= <term> <expr_linha>
+<expr_linha> ::= '+' <term> <expr_linha> 
+               | vazio (ε)
+```
+Apesar de resolver o travamento, essa abordagem gera um código Java fragmentado, com muitos métodos auxiliares (exprLinha()) que deixam o programa complexo.
+
+**3. A Solução Moderna e Elegante: Iteração com EBNF**
+
+A metalinguagem EBNF introduziu o conceito de repetição (Fecho de Kleene), representado pelas chaves { }, que significam "repetido zero ou mais vezes". Com isso, podemos achatar a recursão transformando-a em uma iteração:
+
+```EBNF
+expr = term, { '+', term } ;
+```
+
+Leitura: "Uma expressão começa obrigatoriamente com um termo, seguido por zero ou infinitas repetições de um sinal de '+' e outro termo".
+
+**Por que a EBNF é a melhor amiga do programador?**
+Porque o símbolo de repetição { } da EBNF é traduzido diretamente para um laço while no código Java! A recursão perigosa desaparece, e a estrutura fica extremamente limpa:
+
+```Java
+private void expr() throws Exception {
+    // 1. Lê o primeiro <term> obrigatoriamente
+    term(); 
+    
+    // 2. O bloco { '+' term } vira um laço while!
+    // Enquanto o token atual for um sinal de soma...
+    while (token.tag == Tag.PLUS) {
+        accept(Tag.PLUS); // Consome o '+'
+        term();           // Lê o próximo termo
+    }
+}
+```
