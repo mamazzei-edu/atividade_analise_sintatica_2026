@@ -1,8 +1,7 @@
 name: Autograding Tests
-on:
-  - push
-  - workflow_dispatch
-  - repository_dispatch
+'on':
+- push
+- repository_dispatch
 permissions:
   checks: write
   actions: read
@@ -14,26 +13,84 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      # This is where you place your autograding tests
-      # For more information on this runner, see the documentation at: https://github.com/classroom-resources/autograding-io-grader
-      #
-      # For example, you could run a test suite like this:
-      # - name: Run tests
-      #   uses: classroom-resources/autograding-io-grader@v1
-      #     with:
-      #       test-name: Addition Test
-      #       id: addition-test
-      #       command: "./bin/add.sh"
-      #       input: 1 2
-      #       expected-output: 3
-      #       comparison-method: exact
-      #       timeout: 10
+
+    - name: Configurar JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Teste 01 - Letras e constante simples
+      id: teste01
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Teste 01 - Ignorar espaços
+        setup-command: ''
+        command: mvn test -Dtest=ValidadorParserTest#test01_LetrasEConstantesSimples -f projeto/pom.xml
+        timeout: 10
+        max-score: 2
+
+    - name: Teste 02 - Letras e constante simples
+      id: teste02
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Teste 02 - Operadores lógicos básicos
+        setup-command: ''
+        command: mvn test -Dtest=ValidadorParserTest#test02_OperadoresLogicosBasicos -f projeto/pom.xml
+        timeout: 10
+        max-score: 2
+
+    - name: Teste 03 - Associatividade e repetição
+      id: teste03
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Teste 03 - Associatividade e repetição
+        setup-command: ''
+        command: mvn test -Dtest=ValidadorParserTest#test03_AssociatividadeERepeticao -f projeto/pom.xml
+        timeout: 10
+        max-score: 2
+
+    - name: Teste 04 - Fórmulas bem formadas complexas
+      id: teste04
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Teste 04 - Fórmulas bem formadas complexas
+        setup-command: ''
+        command: mvn test -Dtest=ValidadorParserTest#test04_FormulasBemFormadasComplexas -f projeto/pom.xml
+        timeout: 10
+        max-score: 2
+
+    - name: Teste 05 - Erro sintático deve falhar
+      id: teste05
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Teste 05 - Erro sintático deve falhar
+        setup-command: ''
+        command: mvn test -Dtest=ValidadorParserTest#test05_ErroSintaticoDeveriaFalhar -f projeto/pom.xml
+        timeout: 10
+        max-score: 1
+
+    - name: Teste 06 - Erro sintático parêntese não fechado deve falhar
+      id: teste06
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Teste 06 - Erro sintático parêntese não fechado deve falhar
+        setup-command: ''
+        command: mvn test -Dtest=ValidadorParserTest#test06_ErroSintaticoParentesesNaoFechado -f projeto/pom.xml
+        timeout: 10
+        max-score: 1
+
+
+    
     - name: Autograding Reporter
       uses: classroom-resources/autograding-grading-reporter@v1
-      # For more information on this runner, see the documentation at https://github.com/classroom-resources/autograding-grading-reporter
-      # To output the results of the tests, you can use the
-      # autograding-grading-reporter action like this:
-      # env:
-      # ADDITION-TEST_RESULTS: "${{ steps.addition - test.outputs.result }}"
-      #     with:
-      #         runners: addition-test
+      env:
+        TESTE01_RESULTS: "${{steps.teste01.outputs.result}}"
+        TESTE02_RESULTS: "${{steps.teste02.outputs.result}}"
+        TESTE03_RESULTS: "${{steps.teste03.outputs.result}}"
+        TESTE04_RESULTS: "${{steps.teste04.outputs.result}}"
+        TESTE05_RESULTS: "${{steps.teste05.outputs.result}}"
+        TESTE06_RESULTS: "${{steps.teste06.outputs.result}}"
+      with:
+        runners: teste01,teste02,teste03,teste04,teste05,teste06
